@@ -92,6 +92,25 @@ size_t DTE::read(void) {
   return 0;
 }
 
+bool DTE::ATResponse(char buffer[], size_t bufferSize, unsigned long timeout) {
+  while (!hardwareSerial->available());
+
+  unsigned long startRead = millis();
+  unsigned int i = 0;
+  while (millis() - startRead < timeout) {
+    if(Serial1.available() > 0) {
+      buffer[i++] = Serial1.read();
+    }
+  }
+
+  buffer[i] = '\0';
+
+  return true;
+}
+
+bool DTE::ATResponse(unsigned long timeout) {
+  return ATResponse(responseBuffer, strlen(responseBuffer), timeout);
+}
 
 bool DTE::ATCommand(const char at[], const char *endResponse, unsigned long timeout) {
   // clearReceivedBuffer();
@@ -100,39 +119,11 @@ bool DTE::ATCommand(const char at[], const char *endResponse, unsigned long time
   debugPrint(at, true);
   hardwareSerial->write(at);
 
-  while (!hardwareSerial->available()) {
-    /* code */
-  }
+  ATResponse(timeout);
 
-  Serial.println("Response: ");
+  Serial.println(F("Response: "));
+  Serial.println(responseBuffer);
 
-  unsigned long startRead = millis();
-  while (millis() - startRead < timeout) {
-    if(Serial1.available() > 0) {
-      Serial.write(Serial1.read());
-    }
-  }
-
-  // if (strlen(at) > (sizeof(responseBuffer) - 2)) {
-  //   char atEcho[strlen(at) + 3];
-  //   if (!ATResponse(atEcho, sizeof(atEcho)))
-  //       return false;
-  //   if (strstr(atEcho, "ERROR") != NULL)
-  //       return false;
-  // }
-
-  // while (!isResponseContain(endResponse)) {
-  //   // responseBuffer[0] = '\0';
-  //   if(!ATResponse(timeout)) return false;
-  //   // Serial.println("test");
-  //   if (isResponseContain((const char*) "ERROR\r\n")) return false;
-  //
-  // }
-  // strcpy(response, responseBuffer);
-  // Serial.println(">>>>>>>>>>>>>>>>>>>>>>>");
-  // Serial.println(response);
-  // Serial.println("<<<<<<<<<<<<<<<<<<<<<<<");
-  // responseBuffer[0] = '\0';
   return true;
 }
 
