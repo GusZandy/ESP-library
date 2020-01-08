@@ -10,14 +10,16 @@ void setup() {
   dte.init();
   delay(3000);
 
-  dte.ATCommand(F("AT+RST\r\n"), "ready");
+  // dte.ATCommand(F("AT+RST\r\n"), "ready");
 
   dte.ATCommand(F("AT\r\n"), "OK");
-  // delay(500);
-  // dte.ATCommand(F("AT+RST\r\n"), "OK");
-  // delay(1000);
+  delay(500);
+  dte.ATCommand(F("AT+RST\r\n"), "OK");
+  delay(1000);
   dte.ATCommand(F("AT+CWLAP\r\n"), "OK", 3000);
   delay(1000);
+  dte.ATCommand(F("AT\r\n"), "OK");
+  delay(500);
 }
 
 void loop() {
