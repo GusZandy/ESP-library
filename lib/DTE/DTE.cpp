@@ -93,16 +93,24 @@ size_t DTE::read(void) {
 }
 
 
-bool DTE::ATCommand(const char at[], const char *endResponse, unsigned long timeout, unsigned int wait) {
+bool DTE::ATCommand(const char at[], const char *endResponse, unsigned long timeout) {
   // clearReceivedBuffer();
+  flush();
   debugPrint("command: ", false);
   debugPrint(at, true);
-  hardwareSerial->print(at);
-  delay(wait);
+  hardwareSerial->write(at);
+
+  while (!hardwareSerial->available()) {
+    /* code */
+  }
 
   Serial.println("Response: ");
-  while (hardwareSerial->available()) {
-    Serial.write(hardwareSerial->read());
+
+  unsigned long startRead = millis();
+  while (millis() - startRead < timeout) {
+    if(Serial1.available() > 0) {
+      Serial.write(Serial1.read());
+    }
   }
 
   // if (strlen(at) > (sizeof(responseBuffer) - 2)) {
@@ -128,10 +136,10 @@ bool DTE::ATCommand(const char at[], const char *endResponse, unsigned long time
   return true;
 }
 
-bool DTE::ATCommand(const __FlashStringHelper *at, const char endResponse[], unsigned long timeout, unsigned int wait) {
+bool DTE::ATCommand(const __FlashStringHelper *at, const char endResponse[], unsigned long timeout) {
   char buffer[strlen_P((const char *)at) + 1];
   strcpy_P(buffer, (const char *)at);
-  return ATCommand(buffer, endResponse, timeout, wait);
+  return ATCommand(buffer, endResponse, timeout);
 }
 
 void DTE::init(void) {

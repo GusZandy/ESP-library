@@ -38,8 +38,8 @@ public:
     size_t read(void);
 
     void clearReceivedBuffer(void);
-    bool ATCommand(const char at[], const char endResponse[], unsigned long timeout = 5000, unsigned int wait = 10);
-    bool ATCommand(const __FlashStringHelper *at, const char endResponse[], unsigned long timeout = 5000, unsigned int wait = 10);
+    bool ATCommand(const char at[], const char endResponse[], unsigned long timeout = 1000);
+    bool ATCommand(const __FlashStringHelper *at, const char endResponse[], unsigned long timeout = 1000);
 
     void setDebug(bool debug);
 
