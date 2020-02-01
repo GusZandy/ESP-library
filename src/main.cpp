@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include "Config.h"
 #include "DTE.h"
+#include "TCP.h"
 
 DTE dte(Serial1, ESP_SERIAL_PIN);
+TCP tcp(dte);
 
 void setup() {
   // put your setup code here, to run once:
@@ -12,14 +14,12 @@ void setup() {
 
   // dte.ATCommand(F("AT+RST\r\n"), "ready");
 
-  dte.ATCommand(F("AT\r\n"), "OK");
-  delay(500);
-  dte.ATCommand(F("AT+RST\r\n"), "OK");
+  dte.atRestartModule();
+  dte.AT();
+  dte.atMode(1);
+  dte.atConnectAp(F("mbah dul"), F("12mbahDul345"));
+  dte.AT();
   delay(1000);
-  dte.ATCommand(F("AT+CWLAP\r\n"), "OK", 3000);
-  delay(1000);
-  dte.ATCommand(F("AT\r\n"), "OK");
-  delay(500);
 }
 
 void loop() {
@@ -31,4 +31,8 @@ void loop() {
   //   Serial.write(Serial1.read());
   //   delay(10);
   // }
+  tcp.begin("TCP", "www.postman-echo.com", 80);
+  tcp.send("GET /get?name=Zandy HTTP/1.1\r\nHost: www.postman-echo.com\r\n\r\n");
+  tcp.close();
+  delay(1000);
 }

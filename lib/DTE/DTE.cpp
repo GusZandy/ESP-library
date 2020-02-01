@@ -94,7 +94,6 @@ size_t DTE::read(void) {
 
 bool DTE::ATResponse(char buffer[], size_t bufferSize, unsigned long timeout) {
   flush();
-  Serial.println(timeout);
   unsigned long startRead = millis();
   unsigned int i = 0;
   while (millis() - startRead < timeout) {
@@ -119,16 +118,13 @@ bool DTE::ATCommand(const char at[], const char *endResponse, unsigned long time
   debugPrint(at, true);
   hardwareSerial->write(at);
 
-  // unsigned long startRead = millis();
-  // while (millis() - startRead < timeout) {
-  //   if(Serial1.available() > 0) {
-  //     Serial.write(Serial1.read());
-  //   }
-  // }
   ATResponse(timeout);
-  //
-  Serial.println(F("Response: "));
-  Serial.println(responseBuffer);
+
+  strcpy(response, "");
+  strcpy(response, responseBuffer);
+
+  debugPrint("response: ", true);
+  debugPrint(response, true);
 
   return true;
 }
@@ -137,6 +133,89 @@ bool DTE::ATCommand(const __FlashStringHelper *at, const char endResponse[], uns
   char buffer[strlen_P((const char *)at) + 1];
   strcpy_P(buffer, (const char *)at);
   return ATCommand(buffer, endResponse, timeout);
+}
+
+bool DTE::isResponseContain(const char expected[]) {
+  if (strstr(responseBuffer, expected) == NULL)
+    return false;
+  return true;
+}
+
+bool DTE::isResponseContain(const __FlashStringHelper *expected) {
+  char buffer[strlen_P((const char *)expected) + 1];
+  strcpy_P(buffer, (const char *)expected);
+  return isResponseContain(buffer);
+}
+
+bool DTE::isResponseEqual(const char expected[]) {
+  if (strcmp(responseBuffer, expected) == 0)
+    return false;
+  return true;
+}
+
+bool DTE::isResponseEqual(const __FlashStringHelper *expected) {
+  char buffer[strlen_P((const char *)expected) + 1];
+  strcpy_P(buffer, (const char *)expected);
+  return isResponseEqual(buffer);
+}
+
+bool DTE::isResponseOk(void) {
+  if (strcmp(responseBuffer, "OK\r\n"))
+    return false;
+  return true;
+}
+
+bool DTE::AT(void) {
+  const char* command = "AT\r\n";
+  const char* response = "OK\r\n";
+  if(!ATCommand(command, response)) return false;
+  delay(100);
+  // if (!isResponseOk()) return false;
+  return true;
+}
+
+bool DTE::atRestartModule(void) {
+  const char* command = "AT+RST\r\n";
+  const char* response = "OK\r\n";
+  if(!ATCommand(command, response, 5000)) return false;
+  delay(100);
+  // if (!isResponseOk()) return false;
+  return true;
+}
+
+bool DTE::atMode(unsigned char mode) {
+  const __FlashStringHelper* command = F("AT+CWMODE=%d\r\n");
+  const char* response = "OK\r\n";
+  char buffer[14]; // AT+CWMODE=1
+
+  sprintf_P(buffer, (const char *) command, mode);
+
+  if(!ATCommand(buffer, response)) return false;
+  delay(100);
+  // if (!isResponseOk()) return false;
+  return true;
+}
+
+bool DTE::atConnectAp(const char *ssid, const char *password) {
+  const __FlashStringHelper* command = F("AT+CWJAP=\"%s\",\"%s\"\r\n");
+  const char* response = "OK\r\n";
+  char buffer[50];
+
+  sprintf_P(buffer, (const char *) command, ssid, password);
+
+  if(!ATCommand(buffer, response, 6000)) return false;
+  delay(100);
+  // if (!isResponseOk()) return false;
+  return true;
+}
+
+bool DTE::atConnectAp(const __FlashStringHelper *ssid, const __FlashStringHelper *password) {
+  char bufferSsid[strlen_P((const char *)ssid) + 1];
+  char bufferPassword[strlen_P((const char *)password) + 1];
+
+  strcpy_P(bufferSsid, (const char *) ssid);
+  strcpy_P(bufferPassword, (const char *) password);
+  return atConnectAp(bufferSsid, bufferPassword);
 }
 
 void DTE::init(void) {
